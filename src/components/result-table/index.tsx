@@ -3,6 +3,11 @@ import React from 'react';
 
 const columns = [
   {
+    title: 'Url',
+    dataIndex: 'url',
+    key: 'url',
+  },
+  {
     title: 'First Contentful Paint',
     dataIndex: 'firstContentfulPaint',
     key: 'firstContentfulPaint',
