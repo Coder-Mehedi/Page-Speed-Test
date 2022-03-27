@@ -1,4 +1,4 @@
-import { Button, Col, message, Row, Tabs } from "antd";
+import { Button, Col, message, Row, Tabs, Input } from "antd";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import readXlsxFile from "read-excel-file";
@@ -20,6 +20,9 @@ const PageSpeedPage = () => {
   const [desktopData, setDesktopData] = useState<any>([]);
   const [urlList, setUrlList] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [query, setQuery] = useState("");
+  // const [searchResults, setSearchResults] = React.useState([]);
 
   function pageSpeedApiEndpointUrl(strategy: string, url: string) {
     const apiBaseUrl =
@@ -113,10 +116,24 @@ const PageSpeedPage = () => {
     console.log(key);
   };
 
-  // const tabViews = [
-  //   { key: "desktop", tab: "Desktop" },
-  //   { key: "mobile", tab: "Mobile" },
-  // ];
+  const handleSearch = (value: string) => {
+    setQuery(value);
+  };
+
+  useEffect(() => {
+    const desktopSearch = !query
+      ? desktopData
+      : desktopData.filter((data: any) =>
+          data?.id.toLowerCase().includes(query.toLowerCase())
+        );
+    const mobileSearch = !query
+      ? mobileData
+      : mobileData.filter((data: any) =>
+          data?.id.toLowerCase().includes(query.toLowerCase())
+        );
+    setDesktopData(desktopSearch);
+    setMobileData(mobileSearch);
+  }, [query]);
 
   return (
     <Layout>
@@ -129,17 +146,6 @@ const PageSpeedPage = () => {
       <br />
       <SiteForm siteUrl={siteUrl} setSiteUrl={setSiteUrl} />
       <br />
-      {/* <Tabs defaultActiveKey="desktop" onChange={callback}>
-        {tabViews.length > 1 &&
-          tabViews.map((tabView) => {
-            <TabPane tab={tabView.tab} key={tabView.key}>
-              test
-            </TabPane>;
-            {
-              console.log("TABS", tabView);
-            }
-          })}
-      </Tabs> */}
       <Tabs defaultActiveKey="desktop" onChange={callback}>
         <TabPane tab="Desktop" key="desktop">
           <Button type="primary">
@@ -154,6 +160,15 @@ const PageSpeedPage = () => {
               Export to CSV
             </CSVLink>
           </Button>
+          <br />
+          <br />
+          <Input.Search
+            placeholder="Filter"
+            enterButton={true}
+            onSearch={handleSearch}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
           <br />
           <br />
           <ResultTable
@@ -174,6 +189,15 @@ const PageSpeedPage = () => {
               Export to CSV
             </CSVLink>
           </Button>
+          <br />
+          <br />
+          <Input.Search
+            placeholder="Filter"
+            enterButton={true}
+            onSearch={handleSearch}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
           <br />
           <br />
           <ResultTable
