@@ -1,4 +1,4 @@
-import { Button, Col, message, Row } from "antd";
+import { Button, Col, message, Row, Tabs } from "antd";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import readXlsxFile from "read-excel-file";
@@ -12,9 +12,12 @@ import { CSVLink } from "react-csv";
 
 const window = getWindow();
 
+const { TabPane } = Tabs;
+
 const PageSpeedPage = () => {
   const [siteUrl, setSiteUrl] = useState("");
-  const [resultData, setResultData] = useState<any>([]);
+  const [mobileData, setMobileData] = useState<any>([]);
+  const [desktopData, setDesktopData] = useState<any>([]);
   const [urlList, setUrlList] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,7 +42,15 @@ const PageSpeedPage = () => {
       axios
         .get(pageSpeedApiEndpointUrl("desktop", url))
         .then((response: any) => {
-          setResultData((resultData: any) => [...resultData, response.data]);
+          setDesktopData((desktopData: any) => [...desktopData, response.data]);
+        })
+        .catch((error: any) => {
+          console.log(error.message);
+        });
+      axios
+        .get(pageSpeedApiEndpointUrl("mobile", url))
+        .then((response: any) => {
+          setMobileData((mobileData: any) => [...mobileData, response.data]);
         })
         .catch((error: any) => {
           console.log(error.message);
@@ -47,9 +58,16 @@ const PageSpeedPage = () => {
     });
   }, [urlList]);
 
-  const getData = async (siteUrl: string) => {
+  const getDesktopData = async (siteUrl: string) => {
     const { data } = await axios.get(
       pageSpeedApiEndpointUrl("desktop", siteUrl)
+    );
+    return data;
+  };
+
+  const getMobileData = async (siteUrl: string) => {
+    const { data } = await axios.get(
+      pageSpeedApiEndpointUrl("mobile", siteUrl)
     );
     return data;
   };
@@ -57,8 +75,12 @@ const PageSpeedPage = () => {
   useEffect(() => {
     if (siteUrl) {
       setIsLoading(true);
-      getData(siteUrl).then((data) => {
-        setResultData([...resultData, data]);
+      getDesktopData(siteUrl).then((data) => {
+        setDesktopData([...desktopData, data]);
+        setIsLoading(false);
+      });
+      getMobileData(siteUrl).then((data) => {
+        setMobileData([...mobileData, data]);
         setIsLoading(false);
       });
     }
@@ -87,6 +109,15 @@ const PageSpeedPage = () => {
     },
   };
 
+  const callback = (key: any) => {
+    console.log(key);
+  };
+
+  // const tabViews = [
+  //   { key: "desktop", tab: "Desktop" },
+  //   { key: "mobile", tab: "Mobile" },
+  // ];
+
   return (
     <Layout>
       <Row>
@@ -98,21 +129,59 @@ const PageSpeedPage = () => {
       <br />
       <SiteForm siteUrl={siteUrl} setSiteUrl={setSiteUrl} />
       <br />
-      <Button type="primary">
-        <CSVLink
-          filename={"Pagespeed_Info.csv"}
-          data={resultData}
-          className="btn btn-primary"
-          onClick={() => {
-            message.success("The file is downloading");
-          }}
-        >
-          Export to CSV
-        </CSVLink>
-      </Button>
-      <br />
-      <br />
-      <ResultTable data={formatResultData(resultData)} isLoading={isLoading} />
+      {/* <Tabs defaultActiveKey="desktop" onChange={callback}>
+        {tabViews.length > 1 &&
+          tabViews.map((tabView) => {
+            <TabPane tab={tabView.tab} key={tabView.key}>
+              test
+            </TabPane>;
+            {
+              console.log("TABS", tabView);
+            }
+          })}
+      </Tabs> */}
+      <Tabs defaultActiveKey="desktop" onChange={callback}>
+        <TabPane tab="Desktop" key="desktop">
+          <Button type="primary">
+            <CSVLink
+              filename={"Pagespeed_Info_Desktop.csv"}
+              data={desktopData}
+              className="btn btn-primary"
+              onClick={() => {
+                message.success("The file is downloading");
+              }}
+            >
+              Export to CSV
+            </CSVLink>
+          </Button>
+          <br />
+          <br />
+          <ResultTable
+            data={formatResultData(desktopData)}
+            isLoading={isLoading}
+          />
+        </TabPane>
+        <TabPane tab="Mobile" key="mobile">
+          <Button type="primary">
+            <CSVLink
+              filename={"Pagespeed_Info_Mobile.csv"}
+              data={mobileData}
+              className="btn btn-primary"
+              onClick={() => {
+                message.success("The file is downloading");
+              }}
+            >
+              Export to CSV
+            </CSVLink>
+          </Button>
+          <br />
+          <br />
+          <ResultTable
+            data={formatResultData(mobileData)}
+            isLoading={isLoading}
+          />
+        </TabPane>
+      </Tabs>
     </Layout>
   );
 };
