@@ -25,6 +25,8 @@ const PageSpeedPage = () => {
   const [query, setQuery] = useState("");
   const [selectQuery, setSelectQuery] = useState<string>();
 
+  const [filterData, setFilterData] = useState<any>(desktopData);
+
   function pageSpeedApiEndpointUrl(strategy: string, url: string) {
     const apiBaseUrl =
       "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
@@ -125,92 +127,23 @@ const PageSpeedPage = () => {
     setSelectQuery(value);
   };
 
-  const handleFilter = (
-    query: string,
-    selectQuery: string | undefined,
-    data: any
-  ) => {
-    if (query && selectQuery) {
-      if (selectQuery === "greater") {
-        return data.filter(
-          (item: any) =>
-            item?.id.toLowerCase().includes(query.toLowerCase()) &&
-            item?.score >= 90
-        );
-      }
-      if (selectQuery === "lower") {
-        return data.filter(
-          (item: any) =>
-            item?.id.toLowerCase().includes(query.toLowerCase()) &&
-            item?.score < 90
-        );
-      }
-    } else if (query || selectQuery) {
-      if (selectQuery === "greater") {
-        return data.filter(
-          (item: any) =>
-            item?.id.toLowerCase().includes(query.toLowerCase()) ||
-            item?.score >= 90
-        );
-      }
-      if (selectQuery === "lower") {
-        return data.filter(
-          (item: any) =>
-            item?.id.toLowerCase().includes(query.toLowerCase()) ||
-            item?.score < 90
-        );
-      }
-    }
-    return data.filter((item: any) =>
-      item?.id.toLowerCase().includes(query.toLowerCase())
-    );
-  };
-
   useEffect(() => {
-    const desktopSearch = !query
-      ? desktopData
-      : desktopData.filter((data: any) =>
-          data?.id.toLowerCase().includes(query.toLowerCase())
-        );
-    const mobileSearch = !query
-      ? mobileData
-      : mobileData.filter((data: any) =>
-          data?.id.toLowerCase().includes(query.toLowerCase())
-        );
-    setDesktopData(desktopSearch);
-    setMobileData(mobileSearch);
-  }, [query]);
-
-  useEffect(() => {
-    if (!selectQuery) {
+    if (!query) {
       setDesktopData(desktopData);
       setMobileData(mobileData);
+    } else {
+      setDesktopData(
+        desktopData.filter((data: any) =>
+          data?.id.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+      setMobileData(
+        mobileData.filter((data: any) =>
+          data?.id.toLowerCase().includes(query.toLowerCase())
+        )
+      );
     }
-    if (selectQuery && selectQuery === "lower") {
-      const data1 = desktopData.filter((item: any) => {
-        const score = item?.lighthouseResult.categories.performance.score * 100;
-        score < 90;
-      });
-      const data2 = mobileData.filter((item: any) => {
-        const score = item?.lighthouseResult.categories.performance.score * 100;
-        score < 90;
-      });
-      setDesktopData(data1);
-      setMobileData(data2);
-    }
-    if (selectQuery && selectQuery === "greater") {
-      const data1 = desktopData.filter((item: any) => {
-        const score = item?.lighthouseResult.categories.performance.score * 100;
-        score >= 90;
-      });
-      const data2 = mobileData.filter((item: any) => {
-        const score = item?.lighthouseResult.categories.performance.score * 100;
-        score >= 90;
-      });
-      setDesktopData(data1);
-      setMobileData(data2);
-    }
-  }, [selectQuery]);
+  }, [query]);
 
   const tabs = [
     { tab: "Desktop", key: "desktop" },
