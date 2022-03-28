@@ -22,7 +22,6 @@ const PageSpeedPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [query, setQuery] = useState("");
-  // const [searchResults, setSearchResults] = React.useState([]);
 
   function pageSpeedApiEndpointUrl(strategy: string, url: string) {
     const apiBaseUrl =
@@ -133,7 +132,12 @@ const PageSpeedPage = () => {
         );
     setDesktopData(desktopSearch);
     setMobileData(mobileSearch);
-  }, [query]);
+  }, [query, desktopData, mobileData]);
+
+  const tabs = [
+    { tab: "Desktop", key: "desktop" },
+    { tab: "Mobile", key: "mobile" },
+  ];
 
   return (
     <Layout>
@@ -147,64 +151,41 @@ const PageSpeedPage = () => {
       <SiteForm siteUrl={siteUrl} setSiteUrl={setSiteUrl} />
       <br />
       <Tabs defaultActiveKey="desktop" onChange={callback}>
-        <TabPane tab="Desktop" key="desktop">
-          <Button type="primary">
-            <CSVLink
-              filename={"Pagespeed_Info_Desktop.csv"}
-              data={desktopData}
-              className="btn btn-primary"
-              onClick={() => {
-                message.success("The file is downloading");
-              }}
-            >
-              Export to CSV
-            </CSVLink>
-          </Button>
-          <br />
-          <br />
-          <Input.Search
-            placeholder="Filter"
-            enterButton={true}
-            onSearch={handleSearch}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <br />
-          <br />
-          <ResultTable
-            data={formatResultData(desktopData)}
-            isLoading={isLoading}
-          />
-        </TabPane>
-        <TabPane tab="Mobile" key="mobile">
-          <Button type="primary">
-            <CSVLink
-              filename={"Pagespeed_Info_Mobile.csv"}
-              data={mobileData}
-              className="btn btn-primary"
-              onClick={() => {
-                message.success("The file is downloading");
-              }}
-            >
-              Export to CSV
-            </CSVLink>
-          </Button>
-          <br />
-          <br />
-          <Input.Search
-            placeholder="Filter"
-            enterButton={true}
-            onSearch={handleSearch}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <br />
-          <br />
-          <ResultTable
-            data={formatResultData(mobileData)}
-            isLoading={isLoading}
-          />
-        </TabPane>
+        {tabs.map(({ tab, key }) => (
+          <>
+            <TabPane tab={tab} key={key}>
+              <Button type="primary">
+                <CSVLink
+                  filename={"Pagespeed_Info_Mobile.csv"}
+                  data={key === "mobile" ? mobileData : desktopData}
+                  className="btn btn-primary"
+                  onClick={() => {
+                    message.success("The file is downloading");
+                  }}
+                >
+                  Export to CSV
+                </CSVLink>
+              </Button>
+              <br />
+              <br />
+              <Input.Search
+                placeholder="Filter"
+                enterButton={true}
+                onSearch={handleSearch}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <br />
+              <br />
+              <ResultTable
+                data={formatResultData(
+                  key === "mobile" ? mobileData : desktopData
+                )}
+                isLoading={isLoading}
+              />
+            </TabPane>
+          </>
+        ))}
       </Tabs>
     </Layout>
   );
