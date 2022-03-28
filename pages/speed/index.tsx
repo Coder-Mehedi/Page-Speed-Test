@@ -1,4 +1,4 @@
-import { Button, Col, message, Row, Tabs, Input } from "antd";
+import { Button, Col, message, Row, Tabs, Input, Select } from "antd";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import readXlsxFile from "read-excel-file";
@@ -13,6 +13,7 @@ import { CSVLink } from "react-csv";
 const window = getWindow();
 
 const { TabPane } = Tabs;
+const { Option } = Select;
 
 const PageSpeedPage = () => {
   const [siteUrl, setSiteUrl] = useState("");
@@ -22,6 +23,7 @@ const PageSpeedPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [query, setQuery] = useState("");
+  const [selectQuery, setSelectQuery] = useState<string>();
 
   function pageSpeedApiEndpointUrl(strategy: string, url: string) {
     const apiBaseUrl =
@@ -112,11 +114,56 @@ const PageSpeedPage = () => {
   };
 
   const callback = (key: any) => {
-    console.log(key);
+    // console.log(key);
   };
 
   const handleSearch = (value: string) => {
     setQuery(value);
+  };
+
+  const handleChange = (value: string) => {
+    setSelectQuery(value);
+  };
+
+  const handleFilter = (
+    query: string,
+    selectQuery: string | undefined,
+    data: any
+  ) => {
+    if (query && selectQuery) {
+      if (selectQuery === "greater") {
+        return data.filter(
+          (item: any) =>
+            item?.id.toLowerCase().includes(query.toLowerCase()) &&
+            item?.score >= 90
+        );
+      }
+      if (selectQuery === "lower") {
+        return data.filter(
+          (item: any) =>
+            item?.id.toLowerCase().includes(query.toLowerCase()) &&
+            item?.score < 90
+        );
+      }
+    } else if (query || selectQuery) {
+      if (selectQuery === "greater") {
+        return data.filter(
+          (item: any) =>
+            item?.id.toLowerCase().includes(query.toLowerCase()) ||
+            item?.score >= 90
+        );
+      }
+      if (selectQuery === "lower") {
+        return data.filter(
+          (item: any) =>
+            item?.id.toLowerCase().includes(query.toLowerCase()) ||
+            item?.score < 90
+        );
+      }
+    }
+    return data.filter((item: any) =>
+      item?.id.toLowerCase().includes(query.toLowerCase())
+    );
   };
 
   useEffect(() => {
@@ -132,13 +179,43 @@ const PageSpeedPage = () => {
         );
     setDesktopData(desktopSearch);
     setMobileData(mobileSearch);
-  }, [query, desktopData, mobileData]);
+  }, [query]);
+
+  useEffect(() => {
+    if (!selectQuery) {
+      setDesktopData(desktopData);
+      setMobileData(mobileData);
+    }
+    if (selectQuery && selectQuery === "lower") {
+      const data1 = desktopData.filter((item: any) => {
+        const score = item?.lighthouseResult.categories.performance.score * 100;
+        score < 90;
+      });
+      const data2 = mobileData.filter((item: any) => {
+        const score = item?.lighthouseResult.categories.performance.score * 100;
+        score < 90;
+      });
+      setDesktopData(data1);
+      setMobileData(data2);
+    }
+    if (selectQuery && selectQuery === "greater") {
+      const data1 = desktopData.filter((item: any) => {
+        const score = item?.lighthouseResult.categories.performance.score * 100;
+        score >= 90;
+      });
+      const data2 = mobileData.filter((item: any) => {
+        const score = item?.lighthouseResult.categories.performance.score * 100;
+        score >= 90;
+      });
+      setDesktopData(data1);
+      setMobileData(data2);
+    }
+  }, [selectQuery]);
 
   const tabs = [
     { tab: "Desktop", key: "desktop" },
     { tab: "Mobile", key: "mobile" },
   ];
-
   return (
     <Layout>
       <Row>
@@ -154,27 +231,41 @@ const PageSpeedPage = () => {
         {tabs.map(({ tab, key }) => (
           <>
             <TabPane tab={tab} key={key}>
-              <Button type="primary">
-                <CSVLink
-                  filename={"Pagespeed_Info_Mobile.csv"}
-                  data={key === "mobile" ? mobileData : desktopData}
-                  className="btn btn-primary"
-                  onClick={() => {
-                    message.success("The file is downloading");
-                  }}
-                >
-                  Export to CSV
-                </CSVLink>
-              </Button>
-              <br />
-              <br />
-              <Input.Search
-                placeholder="Filter"
-                enterButton={true}
-                onSearch={handleSearch}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
+              <Row>
+                <Col span={4}>
+                  <Button type="primary">
+                    <CSVLink
+                      filename={"Pagespeed_Info.csv"}
+                      data={key === "mobile" ? mobileData : desktopData}
+                      className="btn btn-primary"
+                      onClick={() => {
+                        message.success("The file is downloading");
+                      }}
+                    >
+                      Export to CSV
+                    </CSVLink>
+                  </Button>
+                </Col>
+                <Col span={4}>
+                  <Input.Search
+                    placeholder="Filter"
+                    enterButton={true}
+                    onSearch={handleSearch}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </Col>
+                <Col span={4}>
+                  <Select
+                    defaultValue="greater"
+                    style={{ width: 240 }}
+                    onChange={handleChange}
+                  >
+                    <Option value="lower">less than 90</Option>
+                    <Option value="greater">greater than 90</Option>
+                  </Select>
+                </Col>
+              </Row>
               <br />
               <br />
               <ResultTable
