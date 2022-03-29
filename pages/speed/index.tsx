@@ -25,7 +25,8 @@ const PageSpeedPage = () => {
   const [query, setQuery] = useState("");
   const [selectQuery, setSelectQuery] = useState<string>();
 
-  const [filterData, setFilterData] = useState<any>(desktopData);
+  const [desktopFilterData, setDesktopFilterData] = useState<any>(desktopData);
+  const [mobileFilterData, setMobileFilterData] = useState<any>(mobileData);
 
   function pageSpeedApiEndpointUrl(strategy: string, url: string) {
     const apiBaseUrl =
@@ -121,28 +122,42 @@ const PageSpeedPage = () => {
 
   const handleSearch = (value: string) => {
     setQuery(value);
+    console.log("QUERY", query);
   };
 
   const handleChange = (value: string) => {
     setSelectQuery(value);
   };
 
-  useEffect(() => {
-    if (!query) {
-      setDesktopData(desktopData);
-      setMobileData(mobileData);
-    } else {
-      setDesktopData(
-        desktopData.filter((data: any) =>
-          data?.id.toLowerCase().includes(query.toLowerCase())
-        )
-      );
-      setMobileData(
-        mobileData.filter((data: any) =>
-          data?.id.toLowerCase().includes(query.toLowerCase())
-        )
-      );
+  const checkDataToShow = (key: string) => {
+    if (key === "mobile") {
+      if (!query) {
+        return mobileData;
+      } else {
+        return mobileFilterData;
+      }
     }
+
+    if (key === "desktop") {
+      if (!query) {
+        return desktopData;
+      } else {
+        return desktopFilterData;
+      }
+    }
+  };
+
+  useEffect(() => {
+    setDesktopFilterData(
+      desktopData.filter((data: any) =>
+        data?.id.toLowerCase().includes(query.toLowerCase())
+      )
+    );
+    setMobileFilterData(
+      mobileData.filter((data: any) =>
+        data?.id.toLowerCase().includes(query.toLowerCase())
+      )
+    );
   }, [query]);
 
   const tabs = [
@@ -202,9 +217,7 @@ const PageSpeedPage = () => {
               <br />
               <br />
               <ResultTable
-                data={formatResultData(
-                  key === "mobile" ? mobileData : desktopData
-                )}
+                data={formatResultData(checkDataToShow(key))}
                 isLoading={isLoading}
               />
             </TabPane>
