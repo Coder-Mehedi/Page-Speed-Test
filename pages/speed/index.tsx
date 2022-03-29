@@ -131,7 +131,7 @@ const PageSpeedPage = () => {
 
   const checkDataToShow = (key: string) => {
     if (key === "mobile") {
-      if (!query) {
+      if (!query && !selectQuery) {
         return mobileData;
       } else {
         return mobileFilterData;
@@ -139,7 +139,7 @@ const PageSpeedPage = () => {
     }
 
     if (key === "desktop") {
-      if (!query) {
+      if (!query && !selectQuery) {
         return desktopData;
       } else {
         return desktopFilterData;
@@ -149,16 +149,32 @@ const PageSpeedPage = () => {
 
   useEffect(() => {
     setDesktopFilterData(
-      desktopData.filter((data: any) =>
-        data?.id.toLowerCase().includes(query.toLowerCase())
-      )
+      desktopData
+        .filter((data: any) =>
+          data?.id.toLowerCase().includes(query.toLowerCase())
+        )
+        .filter((data: any) =>
+          selectQuery === "lower"
+            ? data?.lighthouseResult.categories.performance.score * 100 < 90
+            : selectQuery === "greater"
+            ? data?.lighthouseResult.categories.performance.score * 100 >= 90
+            : data
+        )
     );
     setMobileFilterData(
-      mobileData.filter((data: any) =>
-        data?.id.toLowerCase().includes(query.toLowerCase())
-      )
+      mobileData
+        .filter((data: any) =>
+          data?.id.toLowerCase().includes(query.toLowerCase())
+        )
+        .filter((data: any) =>
+          selectQuery === "lower"
+            ? data?.lighthouseResult.categories.performance.score * 100 < 90
+            : selectQuery === "greater"
+            ? data?.lighthouseResult.categories.performance.score * 100 >= 90
+            : data
+        )
     );
-  }, [query]);
+  }, [query, selectQuery]);
 
   const tabs = [
     { tab: "Desktop", key: "desktop" },
@@ -209,8 +225,8 @@ const PageSpeedPage = () => {
                     style={{ width: 240 }}
                     onChange={handleChange}
                   >
-                    <Option value="lower">less than 90</Option>
-                    <Option value="greater">greater than 90</Option>
+                    <Option value="lower">{"<"} 90</Option>
+                    <Option value="greater">{">"} 90</Option>
                   </Select>
                 </Col>
               </Row>
