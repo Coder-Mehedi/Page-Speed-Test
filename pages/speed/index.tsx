@@ -44,24 +44,36 @@ const PageSpeedPage = () => {
     return apiEndpointUrl;
   }
 
+  const isValidUrl = (url: any) => {
+    const regex = new RegExp(
+      "(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?"
+    );
+    return regex.test(url);
+  };
+
   useEffect(() => {
     urlList.map((url: any) => {
-      axios
-        .get(pageSpeedApiEndpointUrl("desktop", url))
-        .then((response: any) => {
-          setDesktopData((desktopData: any) => [...desktopData, response.data]);
-        })
-        .catch((error: any) => {
-          console.log(error.message);
-        });
-      axios
-        .get(pageSpeedApiEndpointUrl("mobile", url))
-        .then((response: any) => {
-          setMobileData((mobileData: any) => [...mobileData, response.data]);
-        })
-        .catch((error: any) => {
-          console.log(error.message);
-        });
+      if (isValidUrl(url)) {
+        axios
+          .get(pageSpeedApiEndpointUrl("desktop", url))
+          .then((response: any) => {
+            setDesktopData((desktopData: any) => [
+              ...desktopData,
+              response.data,
+            ]);
+          })
+          .catch((error: any) => {
+            console.log(error.message);
+          });
+        axios
+          .get(pageSpeedApiEndpointUrl("mobile", url))
+          .then((response: any) => {
+            setMobileData((mobileData: any) => [...mobileData, response.data]);
+          })
+          .catch((error: any) => {
+            console.log(error.message);
+          });
+      }
     });
   }, [urlList]);
 
